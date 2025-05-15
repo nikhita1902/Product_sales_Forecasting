@@ -1,52 +1,49 @@
-import os
 import pickle
-from flask import Flask, request, jsonify
 import numpy as np
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-# Define base directory (where this app.py lives)
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-# Load scaler and model using relative paths
-scaler_path = os.path.join(BASE_DIR, 'models(deployment)', 'scaler.pkl')
-model_path = os.path.join(BASE_DIR, 'models(deployment)', 'xgboost_model.pkl')
-
-with open(scaler_path, 'rb') as f:
-    scaler = pickle.load(f)
-
-with open(model_path, 'rb') as f:
+# Load the trained model
+with open('C:\Product_Sale_Forecasting\py_flask_app (deployment)\models(deployment)\xgboost_model.pkl', 'rb') as f:
     model = pickle.load(f)
 
-@app.route('/')
-def home():
-    return "Flask API is running!"
+# Load the RobustScaler used to scale sales
+with open('C:\Product_Sale_Forecasting\py_flask_app (deployment)\models(deployment)\scaler.pkl', 'rb') as f:
+    scaler = pickle.load(f)
+
+# 19 features the model expects (same order!)
+feature_names = [
+    'Store_id', 'Holiday', 'Discount', 'Year', 'Month', 'Day',
+    'DayOfWeek', 'Is_Weekend', 'Discount_Offered', 
+    'Store_Type_S2', 'Store_Type_S3', 'Store_Type_S4',
+    'Location_Type_L2', 'Location_Type_L3', 'Location_Type_L4', 'Location_Type_L5',
+    'Region_Code_R2', 'Region_Code_R3', 'Region_Code_R4'
+]
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    data = request.get_json(force=True)
+    try:
+        data = request.json
 
-    # Extract features in the expected order
-    features = [
-        data.get('Store_id'),
-        data.get('Store_Type'),
-        data.get('Location_Type'),
-        data.get('Region_Code'),
-        data.get('Holiday'),
-        data.get('Discount')
-    ]
+        # Extract the input values in correct order
+        input_data = [data[feature] for feature in feature_names]
+        input_array = np.array(input_data).reshape(1, -1)
 
-    # Convert to numpy array and reshape for scaler/model
-    features_array = np.array(features).reshape(1, -1)
+        # Predict (sales in scaled form)
+        scaled_prediction = model.predict(input_array)
 
-    # Scale features
-    features_scaled = scaler.transform(features_array)
+        # Inverse transform to get actual sales
+        actual_prediction = scaler.inverse_transform(scaled_prediction.reshape(-1, 1))[0][0]
 
-    # Predict
-    prediction = model.predict(features_scaled)
+        return jsonify({
+            'predicted_sales': round(actual_prediction, 2)
+        })
 
-    # Return prediction as JSON
-    return jsonify({'prediction': prediction[0]})
+    except KeyError as e:
+        return jsonify({'error': f'Missing feature in input: {str(e)}'}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
