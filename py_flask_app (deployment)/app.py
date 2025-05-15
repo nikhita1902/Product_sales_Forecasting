@@ -1,41 +1,52 @@
-from flask import Flask, request, jsonify
+import os
 import pickle
+from flask import Flask, request, jsonify
 import numpy as np
-import pandas as pd
 
 app = Flask(__name__)
 
-# Load the saved model and scaler once when the server starts
-with open('C:/Product_Sale_Forecasting/py_flask_app (deployment)/models(deployment)/xgboost_model.pkl', 'rb') as f:
-    model = pickle.load(f)
+# Define base directory (where this app.py lives)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-with open('C:/Product_Sale_Forecasting/py_flask_app (deployment)/models(deployment)/scaler.pkl', 'rb') as f:
+# Load scaler and model using relative paths
+scaler_path = os.path.join(BASE_DIR, 'models(deployment)', 'scaler.pkl')
+model_path = os.path.join(BASE_DIR, 'models(deployment)', 'xgboost_model.pkl')
+
+with open(scaler_path, 'rb') as f:
     scaler = pickle.load(f)
+
+with open(model_path, 'rb') as f:
+    model = pickle.load(f)
 
 @app.route('/')
 def home():
-    return "Product Sales Forecasting API is running!"
+    return "Flask API is running!"
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    try:
-        data = request.json  # get JSON input
-        # Convert input JSON to DataFrame
-        input_df = pd.DataFrame([data])
-        
-        # Apply scaler transformation (if needed)
-        input_scaled = scaler.transform(input_df)
-        
-        # Predict using the model
-        prediction = model.predict(input_scaled)
-        
-        # Format the prediction as a list to return as JSON
-        prediction_list = prediction.tolist()
-        
-        return jsonify({'prediction': prediction_list})
-    
-    except Exception as e:
-        return jsonify({'error': str(e)})
+    data = request.get_json(force=True)
+
+    # Extract features in the expected order
+    features = [
+        data.get('Store_id'),
+        data.get('Store_Type'),
+        data.get('Location_Type'),
+        data.get('Region_Code'),
+        data.get('Holiday'),
+        data.get('Discount')
+    ]
+
+    # Convert to numpy array and reshape for scaler/model
+    features_array = np.array(features).reshape(1, -1)
+
+    # Scale features
+    features_scaled = scaler.transform(features_array)
+
+    # Predict
+    prediction = model.predict(features_scaled)
+
+    # Return prediction as JSON
+    return jsonify({'prediction': prediction[0]})
 
 if __name__ == '__main__':
     app.run(debug=True)
