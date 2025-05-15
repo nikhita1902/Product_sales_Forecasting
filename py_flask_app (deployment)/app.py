@@ -6,10 +6,10 @@ import pandas as pd
 app = Flask(__name__)
 
 # Load the saved model and scaler once when the server starts
-with open('C:\Product_Sale_Forecasting\py_flask_app (deployment)\models(deployment)\xgboost_model.pkl', 'rb') as f:
+with open('C:/Product_Sale_Forecasting/py_flask_app (deployment)/models(deployment)/xgboost_model.pkl', 'rb') as f:
     model = pickle.load(f)
 
-with open('C:\Product_Sale_Forecasting\py_flask_app (deployment)\models(deployment)\scaler.pkl', 'rb') as f:
+with open('C:/Product_Sale_Forecasting/py_flask_app (deployment)/models(deployment)/scaler.pkl', 'rb') as f:
     scaler = pickle.load(f)
 
 @app.route('/')
