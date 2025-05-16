@@ -83,7 +83,9 @@ An interactive Tableau Dashboard was created with the following insights:
 
 ## 🚀 Deployment
 
-Model deployed using **[insert your method — Streamlit / Flask / etc.]**
+- Streamlit web application to upload new data and generate predictions
+- Deployed locally and can be extended to platforms like Streamlit Cloud or Hugging Face Spaces
+
 
 ---
 
@@ -97,4 +99,5 @@ scikit-learn
 xgboost
 matplotlib / seaborn
 pickle
+streamlit 
 

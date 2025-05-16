@@ -63,6 +63,11 @@
 * Final test data was feature-engineered with the same process as training data.
 * Generated final submission CSV with `ID` and predicted `Sales`.
 
+**Deployment**
+
+* Streamlit web application to upload new data and generate predictions
+* Deployed locally and can be extended to platforms like Streamlit Cloud or Hugging Face Spaces
+
 
 # Recommendations:
 
