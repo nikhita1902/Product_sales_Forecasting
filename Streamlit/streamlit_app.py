@@ -3,10 +3,10 @@ import pickle
 import numpy as np
 
 # Load model and scaler
-with open('xgboost_model.pkl', 'rb') as model_file:
+with open('C:/Product_Sale_Forecasting/models/xgboost_model.pkl', 'rb') as model_file:
     model = pickle.load(model_file)
 
-with open('scaler.pkl', 'rb') as scaler_file:
+with open('C:/Product_Sale_Forecasting/models/scaler.pkl', 'rb') as scaler_file:
     scaler = pickle.load(scaler_file)
 
 st.title("🛍️ Product Sales Forecasting App")
@@ -54,7 +54,14 @@ if st.button("Predict Sales"):
     prediction = model.predict(input_features)
     
     # Inverse transform
-    unscaled_prediction = scaler.inverse_transform([[prediction[0]]])[0][0]
+    import numpy as np
+
+# Create dummy array with the same shape scaler was trained on: (1, 4)
+# Put prediction in the 1st column (Sales), rest are 0s
+unscaled_prediction = scaler.inverse_transform(
+    np.column_stack(([[prediction[0]]], np.zeros((1, 3))))
+)[0][0]
+
     
-    st.success(f"📈 Predicted Sales (scaled): {prediction[0]:.2f}")
-    st.info(f"💰 Predicted Sales (real): ₹{unscaled_prediction:,.2f}")
+st.success(f"📈 Predicted Sales (scaled): {prediction[0]:.2f}")
+st.info(f"💰 Predicted Sales (real): ₹{unscaled_prediction:,.2f}")
